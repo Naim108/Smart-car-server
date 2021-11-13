@@ -18,6 +18,7 @@ async function run(){
         const productsCollection=database.collection('products')
         const reviewsCollection=database.collection('reviews')
         const ordersCollection=database.collection('orders')
+        const usersCollection = database.collection('users');
                 // add product to mongodb
                 app.post('/addProduct',async(req,res)=>{
                     const result=await productsCollection.insertOne(req.body)
@@ -32,6 +33,12 @@ async function run(){
                          res.json(result.insertedId)
                      })
                  })
+                //  add users to the dartabase
+                 app.post('/users', async (req, res) => {
+                    const user = req.body;
+                    const result = await usersCollection.insertOne(user);
+                    res.json(result);
+                });
          //   get all products 
            app.get('/products',async(req,res)=>{
           const result=await productsCollection.find({}).toArray();
@@ -70,13 +77,34 @@ async function run(){
         const result=await ordersCollection.find({}).toArray();
        res.send(result)     
         })
-         // delete order from manage order
+         // delete order
+         
         app.delete('/manageAllOrder/:id',async(req,res)=>{
         const id=req.params.id;
         const query={_id: ObjectId(id)}
       const result=await ordersCollection.deleteOne(query);
       res.json(result)
        })
+    //    admin role create
+    app.put('/users/admin', async (req, res) => {
+       const user=req.body;
+       const filter={email: user?.email}
+       const updateDoc={$set: {role: 'admin'}}
+       const result=await usersCollection.updateOne(filter,updateDoc)
+       res.json(result)
+    })
+    // checking admin role
+    app.get('/users/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email };
+        const user = await usersCollection.findOne(query);
+       
+        let isAdmin = false;
+        if (user?.role === 'admin') {
+            isAdmin = true;
+        }
+        res.json({ admin: isAdmin });
+    })
 
       
 
