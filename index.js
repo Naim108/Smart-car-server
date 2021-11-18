@@ -2,12 +2,15 @@ const express=require('express')
 const { MongoClient } = require('mongodb');
 const ObjectId=require('mongodb').ObjectId;
 const app=express();
+const fileUpload=require('express-fileupload')
 const cors=require('cors')
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 // middleware
 app.use(cors())
 app.use(express.json())
+app.use(fileUpload())
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.frk7m.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -21,12 +24,24 @@ async function run(){
         const usersCollection = database.collection('users');
                 // add product to mongodb
                 app.post('/addProduct',async(req,res)=>{
-                    const result=await productsCollection.insertOne(req.body)
-                     .then(result=>{
-                         res.json(result.insertedId)
-                     })
+                    const name=req.body.name;
+                    const price=req.body.price;
+                    const description=req.body.description;
+                    const pic=req.files.image;
+                    const picData=pic.data;
+                    const encodedPic=picData.toString('base64');
+                    const img=Buffer.from(encodedPic, 'base64');
+                    const product={
+                        name,
+                        price,
+                        description,
+                        img
+
+                    }
+                   const result=await productsCollection.insertOne(product)
+                     res.json(result)
                  })
-                // add product to mongodb
+                // add review to mongodb
                 app.post('/review',async(req,res)=>{
                     const result=await reviewsCollection.insertOne(req.body)
                      .then(result=>{
